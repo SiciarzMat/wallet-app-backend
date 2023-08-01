@@ -3,6 +3,7 @@ import {
   filterExpenseTransactions,
   findTransactionsByTypeAndDate,
 } from "../dbControllers/transactions.js";
+import { listCategories } from "../dbControllers/categories.js";
 
 export const monthlyBalance = async (req, res, next) => {
   const dateNow = new Date().toISOString();
@@ -61,6 +62,10 @@ export const monthlyBalance = async (req, res, next) => {
       .map((transaction) => transaction.category)
       .filter((category, index, array) => array.indexOf(category) === index);
 
+    const categoryColors = expenseTransactions
+      .map((transaction) => transaction.color)
+      .filter((color, index, array) => array.indexOf(color) === index);
+
     res.json({
       status: "success",
       code: 200,
@@ -71,6 +76,8 @@ export const monthlyBalance = async (req, res, next) => {
         usedCategoryIds,
         categoryNames,
         categoryIdValues,
+        categoryColors,
+        slicedDate,
       },
     });
   } catch (e) {
