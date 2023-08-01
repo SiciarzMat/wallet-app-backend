@@ -3,7 +3,12 @@ import {
   filterExpenseTransactions,
   findTransactionsByTypeAndDate,
 } from "../dbControllers/transactions.js";
-import { listCategories } from "../dbControllers/categories.js";
+import {
+  getCategoryByName,
+  getCategoryById,
+  listCategories,
+} from "../dbControllers/categories.js";
+import { category } from "../models/categories.js";
 
 export const monthlyBalance = async (req, res, next) => {
   const dateNow = new Date().toISOString();
@@ -38,14 +43,19 @@ export const monthlyBalance = async (req, res, next) => {
         return previousValue + number;
       }, 0);
 
-    console.log("expenseValue", expenseValue);
-
     const balanceForMonth = Number(incomeValue - expenseValue);
     const usedCategoryIds = expenseTransactions
       .map((transaction) => transaction.categoryId)
       .filter(
         (categoryId, index, array) => array.indexOf(categoryId) === index
       );
+
+    let categoryColors = [];
+    for (const categoryId of usedCategoryIds) {
+      const foundCategory = await getCategoryById(categoryId);
+      const colorOfCategory = foundCategory.categoryColor.toString();
+      categoryColors.push(colorOfCategory);
+    }
 
     let categoryIdValues = [];
     for (const categoryId of usedCategoryIds) {
@@ -62,10 +72,6 @@ export const monthlyBalance = async (req, res, next) => {
       .map((transaction) => transaction.category)
       .filter((category, index, array) => array.indexOf(category) === index);
 
-    const categoryColors = expenseTransactions
-      .map((transaction) => transaction.color)
-      .filter((color, index, array) => array.indexOf(color) === index);
-
     res.json({
       status: "success",
       code: 200,
@@ -77,7 +83,6 @@ export const monthlyBalance = async (req, res, next) => {
         categoryNames,
         categoryIdValues,
         categoryColors,
-        slicedDate,
       },
     });
   } catch (e) {
